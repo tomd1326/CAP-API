@@ -1,0 +1,40 @@
+2024-02-06 16:49:07 [Registration:FJ19VRG] Valuation date not found in the XML response: <ns0:SingleValuationResult xmlns:ns0="https://soap.cap.co.uk/usedvalueslive">
+  <ns0:Success>false</ns0:Success>
+  <ns0:FailMessage>The request returned no values.</ns0:FailMessage>
+</ns0:SingleValuationResult>
+2024-02-06 16:49:07 [Registration:RK20XFD] Valuation date not found in the XML response: <ns0:SingleValuationResult xmlns:ns0="https://soap.cap.co.uk/usedvalueslive">
+  <ns0:Success>false</ns0:Success>
+  <ns0:FailMessage>The request returned no values.</ns0:FailMessage>
+</ns0:SingleValuationResult>
+2024-02-06 16:49:07 [Registration:WN69RWK] Valuation date not found in the XML response: <ns0:SingleValuationResult xmlns:ns0="https://soap.cap.co.uk/usedvalueslive">
+  <ns0:Success>false</ns0:Success>
+  <ns0:FailMessage>The request returned no values.</ns0:FailMessage>
+</ns0:SingleValuationResult>
+2024-02-06 16:49:08 [Registration:SN70TZW] Valuation date not found in the XML response: <ns0:SingleValuationResult xmlns:ns0="https://soap.cap.co.uk/usedvalueslive">
+  <ns0:Success>false</ns0:Success>
+  <ns0:FailMessage>The request returned no values.</ns0:FailMessage>
+</ns0:SingleValuationResult>
+2024-02-06 16:49:08 [Registration:SN70UBW] Valuation date not found in the XML response: <ns0:SingleValuationResult xmlns:ns0="https://soap.cap.co.uk/usedvalueslive">
+  <ns0:Success>false</ns0:Success>
+  <ns0:FailMessage>The request returned no values.</ns0:FailMessage>
+</ns0:SingleValuationResult>
+2024-02-06 16:49:08 [Registration:FJ19VRG] Valuation date not found in the XML response: <ns0:SingleValuationResult xmlns:ns0="https://soap.cap.co.uk/usedvalueslive">
+  <ns0:Success>false</ns0:Success>
+  <ns0:FailMessage>The request returned no values.</ns0:FailMessage>
+</ns0:SingleValuationResult>
+2024-02-06 16:49:09 [Registration:RK20XFD] Valuation date not found in the XML response: <ns0:SingleValuationResult xmlns:ns0="https://soap.cap.co.uk/usedvalueslive">
+  <ns0:Success>false</ns0:Success>
+  <ns0:FailMessage>The request returned no values.</ns0:FailMessage>
+</ns0:SingleValuationResult>
+2024-02-06 16:49:09 [Registration:WN69RWK] Valuation date not found in the XML response: <ns0:SingleValuationResult xmlns:ns0="https://soap.cap.co.uk/usedvalueslive">
+  <ns0:Success>false</ns0:Success>
+  <ns0:FailMessage>The request returned no values.</ns0:FailMessage>
+</ns0:SingleValuationResult>
+2024-02-06 16:49:10 [Registration:SN70TZW] Valuation date not found in the XML response: <ns0:SingleValuationResult xmlns:ns0="https://soap.cap.co.uk/usedvalueslive">
+  <ns0:Success>false</ns0:Success>
+  <ns0:FailMessage>The request returned no values.</ns0:FailMessage>
+</ns0:SingleValuationResult>
+2024-02-06 16:49:11 [Registration:SN70UBW] Valuation date not found in the XML response: <ns0:SingleValuationResult xmlns:ns0="https://soap.cap.co.uk/usedvalueslive">
+  <ns0:Success>false</ns0:Success>
+  <ns0:FailMessage>The request returned no values.</ns0:FailMessage>
+</ns0:SingleValuationResult>

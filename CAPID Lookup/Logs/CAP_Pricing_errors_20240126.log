@@ -1,0 +1,145 @@
+ERROR:root:An error occurred: 'NoneType' object has no attribute 'text'
+ERROR:asyncio:Task exception was never retrieved
+future: <Task finished name='Task-226' coro=<process_row() done, defined at C:\Users\Tom\OneDrive - Motor Depot\Python Scripts\CAP\CAPID Lookup\CAP_Pricing_VA_v3.0.py:102> exception=ValueError("time data '00/01/1900' does not match format '%d/%m/%Y'")>
+Traceback (most recent call last):
+  File "C:\Users\Tom\OneDrive - Motor Depot\Python Scripts\CAP\CAPID Lookup\CAP_Pricing_VA_v3.0.py", line 111, in process_row
+    reg_date = datetime.strptime(row['DFR'], '%d/%m/%Y').strftime('%Y-%m-%d')
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tom\AppData\Local\Programs\Python\Python312\Lib\_strptime.py", line 555, in _strptime_datetime
+    tt, fraction, gmtoff_fraction = _strptime(data_string, format)
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tom\AppData\Local\Programs\Python\Python312\Lib\_strptime.py", line 333, in _strptime
+    raise ValueError("time data %r does not match format %r" %
+ValueError: time data '00/01/1900' does not match format '%d/%m/%Y'
+ERROR:asyncio:Task exception was never retrieved
+future: <Task finished name='Task-230' coro=<process_row() done, defined at C:\Users\Tom\OneDrive - Motor Depot\Python Scripts\CAP\CAPID Lookup\CAP_Pricing_VA_v3.0.py:102> exception=ValueError("time data '00/01/1900' does not match format '%d/%m/%Y'")>
+Traceback (most recent call last):
+  File "C:\Users\Tom\OneDrive - Motor Depot\Python Scripts\CAP\CAPID Lookup\CAP_Pricing_VA_v3.0.py", line 111, in process_row
+    reg_date = datetime.strptime(row['DFR'], '%d/%m/%Y').strftime('%Y-%m-%d')
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tom\AppData\Local\Programs\Python\Python312\Lib\_strptime.py", line 555, in _strptime_datetime
+    tt, fraction, gmtoff_fraction = _strptime(data_string, format)
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tom\AppData\Local\Programs\Python\Python312\Lib\_strptime.py", line 333, in _strptime
+    raise ValueError("time data %r does not match format %r" %
+ValueError: time data '00/01/1900' does not match format '%d/%m/%Y'
+ERROR:asyncio:Task exception was never retrieved
+future: <Task finished name='Task-234' coro=<process_row() done, defined at C:\Users\Tom\OneDrive - Motor Depot\Python Scripts\CAP\CAPID Lookup\CAP_Pricing_VA_v3.0.py:102> exception=ValueError("time data '00/01/1900' does not match format '%d/%m/%Y'")>
+Traceback (most recent call last):
+  File "C:\Users\Tom\OneDrive - Motor Depot\Python Scripts\CAP\CAPID Lookup\CAP_Pricing_VA_v3.0.py", line 111, in process_row
+    reg_date = datetime.strptime(row['DFR'], '%d/%m/%Y').strftime('%Y-%m-%d')
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tom\AppData\Local\Programs\Python\Python312\Lib\_strptime.py", line 555, in _strptime_datetime
+    tt, fraction, gmtoff_fraction = _strptime(data_string, format)
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tom\AppData\Local\Programs\Python\Python312\Lib\_strptime.py", line 333, in _strptime
+    raise ValueError("time data %r does not match format %r" %
+ValueError: time data '00/01/1900' does not match format '%d/%m/%Y'
+ERROR:asyncio:Task exception was never retrieved
+future: <Task finished name='Task-238' coro=<process_row() done, defined at C:\Users\Tom\OneDrive - Motor Depot\Python Scripts\CAP\CAPID Lookup\CAP_Pricing_VA_v3.0.py:102> exception=ValueError("time data '00/01/1900' does not match format '%d/%m/%Y'")>
+Traceback (most recent call last):
+  File "C:\Users\Tom\OneDrive - Motor Depot\Python Scripts\CAP\CAPID Lookup\CAP_Pricing_VA_v3.0.py", line 111, in process_row
+    reg_date = datetime.strptime(row['DFR'], '%d/%m/%Y').strftime('%Y-%m-%d')
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tom\AppData\Local\Programs\Python\Python312\Lib\_strptime.py", line 555, in _strptime_datetime
+    tt, fraction, gmtoff_fraction = _strptime(data_string, format)
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tom\AppData\Local\Programs\Python\Python312\Lib\_strptime.py", line 333, in _strptime
+    raise ValueError("time data %r does not match format %r" %
+ValueError: time data '00/01/1900' does not match format '%d/%m/%Y'
+ERROR:asyncio:Task exception was never retrieved
+future: <Task finished name='Task-242' coro=<process_row() done, defined at C:\Users\Tom\OneDrive - Motor Depot\Python Scripts\CAP\CAPID Lookup\CAP_Pricing_VA_v3.0.py:102> exception=ValueError("time data '00/01/1900' does not match format '%d/%m/%Y'")>
+Traceback (most recent call last):
+  File "C:\Users\Tom\OneDrive - Motor Depot\Python Scripts\CAP\CAPID Lookup\CAP_Pricing_VA_v3.0.py", line 111, in process_row
+    reg_date = datetime.strptime(row['DFR'], '%d/%m/%Y').strftime('%Y-%m-%d')
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tom\AppData\Local\Programs\Python\Python312\Lib\_strptime.py", line 555, in _strptime_datetime
+    tt, fraction, gmtoff_fraction = _strptime(data_string, format)
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tom\AppData\Local\Programs\Python\Python312\Lib\_strptime.py", line 333, in _strptime
+    raise ValueError("time data %r does not match format %r" %
+ValueError: time data '00/01/1900' does not match format '%d/%m/%Y'
+ERROR:asyncio:Task exception was never retrieved
+future: <Task finished name='Task-246' coro=<process_row() done, defined at C:\Users\Tom\OneDrive - Motor Depot\Python Scripts\CAP\CAPID Lookup\CAP_Pricing_VA_v3.0.py:102> exception=ValueError("time data '00/01/1900' does not match format '%d/%m/%Y'")>
+Traceback (most recent call last):
+  File "C:\Users\Tom\OneDrive - Motor Depot\Python Scripts\CAP\CAPID Lookup\CAP_Pricing_VA_v3.0.py", line 111, in process_row
+    reg_date = datetime.strptime(row['DFR'], '%d/%m/%Y').strftime('%Y-%m-%d')
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tom\AppData\Local\Programs\Python\Python312\Lib\_strptime.py", line 555, in _strptime_datetime
+    tt, fraction, gmtoff_fraction = _strptime(data_string, format)
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tom\AppData\Local\Programs\Python\Python312\Lib\_strptime.py", line 333, in _strptime
+    raise ValueError("time data %r does not match format %r" %
+ValueError: time data '00/01/1900' does not match format '%d/%m/%Y'
+ERROR:asyncio:Task exception was never retrieved
+future: <Task finished name='Task-226' coro=<process_row() done, defined at C:\Users\Tom\OneDrive - Motor Depot\Python Scripts\CAP\CAPID Lookup\CAP_Pricing_VA_v3.0.py:102> exception=ValueError("time data '00/01/1900' does not match format '%d/%m/%Y'")>
+Traceback (most recent call last):
+  File "C:\Users\Tom\OneDrive - Motor Depot\Python Scripts\CAP\CAPID Lookup\CAP_Pricing_VA_v3.0.py", line 111, in process_row
+    reg_date = datetime.strptime(row['DFR'], '%d/%m/%Y').strftime('%Y-%m-%d')
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tom\AppData\Local\Programs\Python\Python312\Lib\_strptime.py", line 555, in _strptime_datetime
+    tt, fraction, gmtoff_fraction = _strptime(data_string, format)
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tom\AppData\Local\Programs\Python\Python312\Lib\_strptime.py", line 333, in _strptime
+    raise ValueError("time data %r does not match format %r" %
+ValueError: time data '00/01/1900' does not match format '%d/%m/%Y'
+ERROR:asyncio:Task exception was never retrieved
+future: <Task finished name='Task-230' coro=<process_row() done, defined at C:\Users\Tom\OneDrive - Motor Depot\Python Scripts\CAP\CAPID Lookup\CAP_Pricing_VA_v3.0.py:102> exception=ValueError("time data '00/01/1900' does not match format '%d/%m/%Y'")>
+Traceback (most recent call last):
+  File "C:\Users\Tom\OneDrive - Motor Depot\Python Scripts\CAP\CAPID Lookup\CAP_Pricing_VA_v3.0.py", line 111, in process_row
+    reg_date = datetime.strptime(row['DFR'], '%d/%m/%Y').strftime('%Y-%m-%d')
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tom\AppData\Local\Programs\Python\Python312\Lib\_strptime.py", line 555, in _strptime_datetime
+    tt, fraction, gmtoff_fraction = _strptime(data_string, format)
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tom\AppData\Local\Programs\Python\Python312\Lib\_strptime.py", line 333, in _strptime
+    raise ValueError("time data %r does not match format %r" %
+ValueError: time data '00/01/1900' does not match format '%d/%m/%Y'
+ERROR:asyncio:Task exception was never retrieved
+future: <Task finished name='Task-234' coro=<process_row() done, defined at C:\Users\Tom\OneDrive - Motor Depot\Python Scripts\CAP\CAPID Lookup\CAP_Pricing_VA_v3.0.py:102> exception=ValueError("time data '00/01/1900' does not match format '%d/%m/%Y'")>
+Traceback (most recent call last):
+  File "C:\Users\Tom\OneDrive - Motor Depot\Python Scripts\CAP\CAPID Lookup\CAP_Pricing_VA_v3.0.py", line 111, in process_row
+    reg_date = datetime.strptime(row['DFR'], '%d/%m/%Y').strftime('%Y-%m-%d')
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tom\AppData\Local\Programs\Python\Python312\Lib\_strptime.py", line 555, in _strptime_datetime
+    tt, fraction, gmtoff_fraction = _strptime(data_string, format)
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tom\AppData\Local\Programs\Python\Python312\Lib\_strptime.py", line 333, in _strptime
+    raise ValueError("time data %r does not match format %r" %
+ValueError: time data '00/01/1900' does not match format '%d/%m/%Y'
+ERROR:asyncio:Task exception was never retrieved
+future: <Task finished name='Task-238' coro=<process_row() done, defined at C:\Users\Tom\OneDrive - Motor Depot\Python Scripts\CAP\CAPID Lookup\CAP_Pricing_VA_v3.0.py:102> exception=ValueError("time data '00/01/1900' does not match format '%d/%m/%Y'")>
+Traceback (most recent call last):
+  File "C:\Users\Tom\OneDrive - Motor Depot\Python Scripts\CAP\CAPID Lookup\CAP_Pricing_VA_v3.0.py", line 111, in process_row
+    reg_date = datetime.strptime(row['DFR'], '%d/%m/%Y').strftime('%Y-%m-%d')
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tom\AppData\Local\Programs\Python\Python312\Lib\_strptime.py", line 555, in _strptime_datetime
+    tt, fraction, gmtoff_fraction = _strptime(data_string, format)
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tom\AppData\Local\Programs\Python\Python312\Lib\_strptime.py", line 333, in _strptime
+    raise ValueError("time data %r does not match format %r" %
+ValueError: time data '00/01/1900' does not match format '%d/%m/%Y'
+ERROR:asyncio:Task exception was never retrieved
+future: <Task finished name='Task-242' coro=<process_row() done, defined at C:\Users\Tom\OneDrive - Motor Depot\Python Scripts\CAP\CAPID Lookup\CAP_Pricing_VA_v3.0.py:102> exception=ValueError("time data '00/01/1900' does not match format '%d/%m/%Y'")>
+Traceback (most recent call last):
+  File "C:\Users\Tom\OneDrive - Motor Depot\Python Scripts\CAP\CAPID Lookup\CAP_Pricing_VA_v3.0.py", line 111, in process_row
+    reg_date = datetime.strptime(row['DFR'], '%d/%m/%Y').strftime('%Y-%m-%d')
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tom\AppData\Local\Programs\Python\Python312\Lib\_strptime.py", line 555, in _strptime_datetime
+    tt, fraction, gmtoff_fraction = _strptime(data_string, format)
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tom\AppData\Local\Programs\Python\Python312\Lib\_strptime.py", line 333, in _strptime
+    raise ValueError("time data %r does not match format %r" %
+ValueError: time data '00/01/1900' does not match format '%d/%m/%Y'
+ERROR:asyncio:Task exception was never retrieved
+future: <Task finished name='Task-246' coro=<process_row() done, defined at C:\Users\Tom\OneDrive - Motor Depot\Python Scripts\CAP\CAPID Lookup\CAP_Pricing_VA_v3.0.py:102> exception=ValueError("time data '00/01/1900' does not match format '%d/%m/%Y'")>
+Traceback (most recent call last):
+  File "C:\Users\Tom\OneDrive - Motor Depot\Python Scripts\CAP\CAPID Lookup\CAP_Pricing_VA_v3.0.py", line 111, in process_row
+    reg_date = datetime.strptime(row['DFR'], '%d/%m/%Y').strftime('%Y-%m-%d')
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tom\AppData\Local\Programs\Python\Python312\Lib\_strptime.py", line 555, in _strptime_datetime
+    tt, fraction, gmtoff_fraction = _strptime(data_string, format)
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tom\AppData\Local\Programs\Python\Python312\Lib\_strptime.py", line 333, in _strptime
+    raise ValueError("time data %r does not match format %r" %
+ValueError: time data '00/01/1900' does not match format '%d/%m/%Y'

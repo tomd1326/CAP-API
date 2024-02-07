@@ -1,0 +1,186 @@
+import requests
+import pandas as pd
+import csv
+import xml.etree.ElementTree as ET
+from datetime import datetime
+import logging
+import time
+import os
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import threading
+import glob
+
+# Create a timestamp for the log file
+current_date = datetime.now().strftime('%Y-%m-%d %H_%M_%S')
+log_file = f'D:/Tom/Python Scripts/CAP/CAP Stock/Logs/CAP_Stock_errors_{current_date}.log'
+
+# Configure logging
+logging.basicConfig(filename=log_file, level=logging.INFO, format='%(asctime)s %(message)s')
+
+# Constants
+URL = 'https://soap.cap.co.uk/usedvalueslive/capusedvalueslive.asmx/GetUsedLive_IdRegDateMileage'
+HEADERS = {'Content-Type': 'application/x-www-form-urlencoded'}
+SUBSCRIBER_ID = '101148'
+PASSWORD = 'DRM148'
+DATABASE = 'CAR'
+FIXED_VALUATION_DATE = '2023-11-28'
+VALUATION_DATE = datetime.now().strftime('%Y-%m-%d')
+input_excel_pattern = r'D:\Tom\Python Scripts\CAP\CAP Stock\vehicles-autoedit*.xlsx'
+
+# Modify output_csv_path to include date
+output_csv_base = r'D:\Tom\Python Scripts\CAP\CAP Stock\CAP_Stock_Output'
+current_date_for_file = datetime.now().strftime('_%Y_%m_%d')
+output_csv_path = f"{output_csv_base}{current_date_for_file}.csv"
+
+# Check if file exists and modify name to prevent overwrite
+file_counter = 1
+while os.path.exists(output_csv_path):
+    output_csv_path = f"{output_csv_base}{current_date_for_file}_{file_counter}.csv"
+    file_counter += 1
+
+NAMESPACE = {'ns': 'https://soap.cap.co.uk/usedvalueslive'}
+
+# Load and filter out rows with any blank input data from Excel
+input_files = glob.glob(input_excel_pattern)
+
+if not input_files:
+    print(f"No matching Excel files found with pattern: {input_excel_pattern}")
+    exit()
+
+input_excel_path = input_files[0]
+
+# Read the entire Excel file
+df = pd.read_excel(input_excel_path)
+
+# Add new columns with default values
+df['CleanLive'] = 0.0  # Initialize as float
+df['RetailLive'] = 0.0  # Initialize as float
+df['CleanMonth'] = 0.0  # Initialize as float
+df['RetailMonth'] = 0.0  # Initialize as float
+
+# Clean the Price column
+df['Price'] = df['Price'].replace({'£': '', ',': ''}, regex=True)
+df['Price'] = pd.to_numeric(df['Price'], errors='coerce').fillna(0)
+
+# Define the required columns
+required_columns = ['Registration', 'DateFirstRegistered', 'Mileage', 'CapID', 'Status']
+
+# Filter out rows with Status 'COURTESY'
+df = df[df['Status'] != 'COURTESY']  # Add this line to exclude 'COURTESY' rows
+
+df.reset_index(drop=True, inplace=True)
+
+max_retries = 0
+print_lock = threading.Lock()
+
+# Functions to round up mileage
+def round_up_to_nearest(mileage, round_to):
+    return int((mileage + round_to - 1) / round_to) * round_to
+
+# Function to fetch with retries
+def fetch_with_retries(payload, registration, mileage_for_request, capid, reg_date, session, valuation_date_type, round_to):
+    response = session.post(URL, headers=HEADERS, data=payload)
+
+    # Check for successful response, proceed only if successful
+    if response.status_code == 200:
+        root = ET.fromstring(response.content)
+        valuation = root.find('.//ns:Valuation', NAMESPACE)
+
+        if valuation is not None:
+            clean_element = valuation.find('ns:Clean', NAMESPACE)
+            retail_element = valuation.find('ns:Retail', NAMESPACE)
+            clean = clean_element.text if clean_element is not None else ''
+            retail = retail_element.text if retail_element is not None else ''
+
+            if not clean and round_to == 1000:
+                # If Clean value is missing for 1000 rounding, try 10000 rounding
+                mileage_for_request = round_up_to_nearest(mileage_for_request, 10000)
+                payload['mileage'] = mileage_for_request
+                return fetch_with_retries(payload, registration, mileage_for_request, capid, reg_date, session, valuation_date_type, 10000)
+
+            return (valuation_date_type, registration, clean, retail, mileage_for_request if round_to == 10000 else '')
+    else:
+        logging.error(f"Server returned status code {response.status_code}: {response.content}, Registration: {registration}, Mileage: {mileage_for_request}")
+    
+    return None
+
+max_workers = 4
+
+# Define a function to process each row
+def process_row(idx, row, df):
+    registration = row['Registration']
+    print(f"Processing row {idx + 1} of {len(df)}, Registration: {registration}")
+    
+    reg_date = datetime.strptime(row['DateFirstRegistered'], '%d/%m/%Y').strftime('%Y-%m-%d')
+    capid = int(row['CapID'])
+
+    # Create payload for requests
+    payload = {
+        'subscriberId': SUBSCRIBER_ID,
+        'password': PASSWORD,
+        'database': DATABASE,
+        'capid': capid,
+        'regDate': reg_date
+    }
+
+    # Initialize variables to store results
+    current_valuation = {'clean': '', 'retail': ''}
+    fixed_valuation = {'clean': '', 'retail': ''}
+    rounded_up_10000 = ''
+
+    # Round up mileage to nearest 1000 for initial request
+    rounded_mileage = round_up_to_nearest(row['Mileage'], 1000)
+    payload['mileage'] = rounded_mileage
+    payload['valuationDate'] = VALUATION_DATE
+
+    # Set up the future task for current valuation date
+    future1 = executor.submit(fetch_with_retries, payload.copy(), registration, rounded_mileage, capid, reg_date,
+                        session, 'current', 1000)
+
+    # Adjust payload for fixed valuation date and set up future task
+    payload['valuationDate'] = FIXED_VALUATION_DATE
+    future2 = executor.submit(fetch_with_retries, payload, registration, rounded_mileage, capid, reg_date, session,
+                        'fixed', 1000)
+
+    # Process the futures as they complete for each row
+    for future in as_completed([future1, future2]):
+        result = future.result()
+        if result is not None:
+            valuation_date_type, registration, clean, retail, rounded_up_10000 = result
+            if valuation_date_type == 'current':
+                current_valuation['clean'] = clean
+                current_valuation['retail'] = retail
+            elif valuation_date_type == 'fixed':
+                fixed_valuation['clean'] = clean
+                fixed_valuation['retail'] = retail
+
+    # Update the dataframe with the results
+    df.at[idx, 'CleanLive'] = current_valuation['clean']
+    df.at[idx, 'RetailLive'] = current_valuation['retail']
+    df.at[idx, 'CleanMonth'] = fixed_valuation['clean']
+    df.at[idx, 'RetailMonth'] = fixed_valuation['retail']
+
+# Add new columns to the dataframe
+df['CleanLive'] = ''
+df['RetailLive'] = ''
+df['CleanMonth'] = ''
+df['RetailMonth'] = ''
+
+
+# Open the CSV file in append mode at the beginning
+with open(output_csv_path, 'a', newline='') as f_output, ThreadPoolExecutor(max_workers=max_workers) as executor, requests.Session() as session:
+
+    # Process each row conditionally
+    for idx, row in df.iterrows():
+        # Check if any of the required columns are blank
+        if not row[required_columns].isnull().any():
+            process_row(idx, row, df)
+
+    # Create a new DataFrame with values only to remove formatting
+    df_values_only = pd.DataFrame(df.values, columns=df.columns)
+
+    # Save the updated dataframe to a new CSV file
+    output_csv_path = input_excel_path.replace('.xlsx', '_CAPfigures.csv')
+    df.to_csv(output_csv_path, index=False)
+
+print(f"Script completed. Processed data saved to {output_csv_path}. Errors and info messages logged to {log_file}")

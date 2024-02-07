@@ -1,0 +1,157 @@
+import requests
+import pandas as pd
+import csv
+import xml.etree.ElementTree as ET
+from datetime import datetime
+import logging
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from threading import Lock
+
+# Create a timestamp for the log file
+current_date = datetime.now().strftime('%Y-%m-%d %H_%M_%S')
+log_file = f'D:/Tom/Python Scripts/CAP/CAP Stock/CAP_Stock_errors_{current_date}.log'
+
+# Configure logging
+logging.basicConfig(filename=log_file, level=logging.INFO, format='%(asctime)s %(message)s')
+
+# Constants
+URL = 'https://soap.cap.co.uk/usedvalueslive/capusedvalueslive.asmx/GetUsedLive_IdRegDateMileage'
+HEADERS = {'Content-Type': 'application/x-www-form-urlencoded'}
+SUBSCRIBER_ID = '101148'
+PASSWORD = 'DRM148'
+DATABASE = 'CAR'
+FIXED_VALUATION_DATE = '2023-10-27'
+VALUATION_DATE = datetime.now().strftime('%Y-%m-%d')
+input_csv_path = r'D:\Tom\Python Scripts\CAP\CAP Stock\CAP_Stock_Input.csv'
+output_csv_path = r'D:\Tom\Python Scripts\CAP\CAP Stock\CAP_Stock_Output.csv'
+
+NAMESPACE = {'ns': 'https://soap.cap.co.uk/usedvalueslive'}
+
+# Load and filter out rows with any blank input data
+df = pd.read_csv(input_csv_path).dropna()
+
+max_retries = 3
+print_lock = Lock()  # Initialize a lock object for thread-safe printing
+
+# Functions to round up mileage
+def round_up_to_nearest(mileage, round_to):
+    return int((mileage + round_to - 1) / round_to) * round_to
+
+# Function to fetch with retries
+def fetch_with_retries(payload, registration, mileage_for_request, capid, reg_date, session, valuation_date_type,
+                       round_to):
+    retries = 0
+    while retries < max_retries:
+        response = session.post(URL, headers=HEADERS, data=payload)
+        if response.status_code != 200:
+            error_message = f"Server returned status code {response.status_code}: {response.content}"
+            logging.error(f"{error_message}, Registration: {registration}, Mileage: {mileage_for_request}")
+            retries += 1
+            time.sleep(1)
+        else:
+            break
+
+    if retries == max_retries:
+        logging.error(
+            f"Request failed after {max_retries} retries, Registration: {registration}, Mileage: {mileage_for_request}")
+        return None
+
+    root = ET.fromstring(response.content)
+    valuation = root.find('.//ns:Valuation', NAMESPACE)
+
+    if valuation is None:
+        logging.warning(f"No valuation found for Registration: {registration}, Mileage: {mileage_for_request}")
+        return None
+
+    clean_element = valuation.find('ns:Clean', NAMESPACE)
+    retail_element = valuation.find('ns:Retail', NAMESPACE)
+    clean = clean_element.text if clean_element is not None else ''
+    retail = retail_element.text if retail_element is not None else ''
+
+    if not clean and round_to == 1000:
+        # If Clean value is missing for 1000 rounding, try 10000 rounding
+        mileage_for_request = round_up_to_nearest(mileage_for_request, 10000)
+        payload['mileage'] = mileage_for_request
+        return fetch_with_retries(payload, registration, mileage_for_request, capid, reg_date, session,
+                                  valuation_date_type, 10000)
+
+    return (valuation_date_type, registration, clean, retail, mileage_for_request if round_to == 10000 else '')
+
+# Initialize output dictionary
+output_data = {}
+
+max_workers = 4  # Reduced to 4 to prevent connection pool issues
+
+# Initialize counter
+counter = 1
+
+# Loop through DataFrame rows
+with ThreadPoolExecutor(max_workers=max_workers) as executor, requests.Session() as session:
+    futures = []
+    for idx, row in df.iterrows():
+        print(f"Processing row {counter} of {len(df)}, Registration: {row['Registration']}")
+
+        reg_date = datetime.strptime(row['DateFirstRegistered'], '%d/%m/%Y').strftime('%Y-%m-%d')
+        capid = int(row['CapID'])
+
+        # Create payload for requests
+        payload = {
+            'subscriberId': SUBSCRIBER_ID,
+            'password': PASSWORD,
+            'database': DATABASE,
+            'capid': capid,
+            'regDate': reg_date
+        }
+
+        # Round up mileage to nearest 1000 for initial request
+        rounded_mileage = round_up_to_nearest(row['Mileage'], 1000)
+        payload['mileage'] = rounded_mileage
+        payload['valuationDate'] = VALUATION_DATE
+
+        # Set up the future task for current valuation date
+        future1 = executor.submit(fetch_with_retries, payload.copy(), row["Registration"], rounded_mileage, capid, reg_date,
+                            session, 'current', 1000)
+
+        # Adjust payload for fixed valuation date and set up future task
+        payload['valuationDate'] = FIXED_VALUATION_DATE
+        future2 = executor.submit(fetch_with_retries, payload, row["Registration"], rounded_mileage, capid, reg_date, session,
+                            'fixed', 1000)
+
+        # Initialize output_data entry for each registration
+        output_data[row["Registration"]] = [
+            row["Registration"], row['Mileage'], '', capid, reg_date, '', '', VALUATION_DATE, '', '',
+            FIXED_VALUATION_DATE]
+
+        counter += 1
+
+        # Store the futures in the list
+        futures.extend([future1, future2])
+
+    # Process the futures as they complete
+    for future in as_completed(futures):
+        result = future.result()
+
+        if result is None:
+            continue
+
+        valuation_date_type, registration, clean, retail, rounded_up_10000 = result
+
+        if valuation_date_type == 'current':
+            output_data[registration][5:7] = [clean, retail]
+            if rounded_up_10000:
+                output_data[registration][2] = rounded_up_10000  # Set RoundedUp10000
+        elif valuation_date_type == 'fixed':
+            output_data[registration][8:10] = [clean, retail]
+
+# Write to CSV
+with open(output_csv_path, 'w', newline='') as f_output:
+    csv_writer = csv.writer(f_output)
+    csv_writer.writerow([
+        'VRM', 'Mileage', 'RoundedUp10000', 'CAPID', 'DFR', 'CleanLive', 'RetailLive',
+        'ValuationDateLive', 'CleanMonth', 'RetailMonth', 'ValuationDateMonth'
+    ])
+    for row in output_data.values():
+        csv_writer.writerow(row)
+
+print(f"Script completed. Errors and info messages logged to {log_file}")

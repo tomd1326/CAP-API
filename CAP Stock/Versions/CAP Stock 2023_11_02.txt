@@ -1,0 +1,135 @@
+import requests
+import pandas as pd
+import csv
+import xml.etree.ElementTree as ET
+from datetime import datetime
+import logging
+import time
+from concurrent.futures import ThreadPoolExecutor
+
+# Create a timestamp for the log file
+current_date = datetime.now().strftime('%Y-%m-%d')
+log_file = f'D:/Tom/Python Scripts/CAP/CAP_Stock_errors_{current_date}.log'
+
+# Configure logging to write errors and info messages to the log file
+logging.basicConfig(filename=log_file, level=logging.INFO, format='%(asctime)s %(message)s')
+
+# Constants
+URL = 'https://soap.cap.co.uk/usedvalueslive/capusedvalueslive.asmx/GetUsedLive_IdRegDateMileage'
+HEADERS = {'Content-Type': 'application/x-www-form-urlencoded'}
+SUBSCRIBER_ID = '101148'
+PASSWORD = 'DRM148'
+DATABASE = 'CAR'
+VALUATION_DATE = datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
+input_csv_path = r'D:\Tom\Python Scripts\CAP\CAP_Input_Stock.csv'
+output_csv_path = r'D:\Tom\Python Scripts\CAP\CAP_Output_Stock.csv'
+
+NAMESPACE = {'ns': 'https://soap.cap.co.uk/usedvalueslive'}
+
+# Load and filter out rows with any blank input data
+df = pd.read_csv(input_csv_path).dropna()
+
+
+def round_up_to_nearest_thousand(mileage):
+    return int((mileage + 999) / 1000) * 1000
+
+
+def round_up_to_nearest_ten_thousand(mileage):
+    return int((mileage + 9999) / 10000) * 10000
+
+
+max_retries = 3
+
+
+def fetch_with_retries(payload, registration, mileage_for_request, capid, reg_date, session):
+    retries = 0
+    while retries < max_retries:
+        response = session.post(URL, headers=HEADERS, data=payload)
+        if response.status_code != 200:
+            error_message = f"Server returned status code {response.status_code}: {response.content}"
+            logging.error(f"{error_message}, Registration: {registration}")
+            retries += 1
+            time.sleep(1)
+        else:
+            break
+
+    if retries == max_retries:
+        logging.error(f"Request failed after {max_retries} retries, Registration: {registration}")
+
+    root = ET.fromstring(response.content)
+    valuation = root.find('.//ns:Valuation', NAMESPACE)
+
+    clean = ''
+
+    if valuation is not None:
+        clean_element = valuation.find('ns:Clean', NAMESPACE)
+        clean = clean_element.text if clean_element is not None else ''
+
+    if not clean:
+        logging.warning(f"Missing Clean value for Registration: {registration} using Mileage: {mileage_for_request}")
+
+    return valuation, registration, mileage_for_request, capid, reg_date
+
+
+output_rows = []
+
+max_workers = 4  # Reduced to 4 to prevent connection pool issues
+
+with ThreadPoolExecutor(max_workers=max_workers) as executor, requests.Session() as session:
+    futures = []
+    for idx, row in df.iterrows():
+        print(f"Processing row {int(idx) + 1} of {len(df)}, Registration: {row['Registration']}")
+
+        reg_date = datetime.strptime(row['DateFirstRegistered'], '%d/%m/%Y').strftime('%Y-%m-%d')
+        rounded_mileage = round_up_to_nearest_thousand(row['Mileage'])
+        capid = int(row['CapID'])
+
+        payload = {
+            'subscriberId': SUBSCRIBER_ID,
+            'password': PASSWORD,
+            'database': DATABASE,
+            'capid': capid,
+            'valuationDate': VALUATION_DATE,
+            'regDate': reg_date,
+            'mileage': rounded_mileage
+        }
+
+        futures.append(
+            executor.submit(fetch_with_retries, payload, row["Registration"], rounded_mileage, capid, reg_date,
+                            session))
+
+    for future in futures:
+        valuation, registration, mileage_for_request, capid, reg_date = future.result()
+
+        clean = ''
+        retail = ''
+        rounded_up_mileage_value = ''
+
+        if valuation is not None:
+            clean_element = valuation.find('ns:Clean', NAMESPACE)
+            retail_element = valuation.find('ns:Retail', NAMESPACE)
+            clean = clean_element.text if clean_element is not None else ''
+            retail = retail_element.text if retail_element is not None else ''
+
+            if not clean and mileage_for_request == rounded_mileage:
+                rounded_up_mileage_value = round_up_to_nearest_ten_thousand(rounded_mileage)
+                payload['mileage'] = rounded_up_mileage_value
+                valuation, _, _, _, _ = fetch_with_retries(payload, registration, rounded_up_mileage_value, capid,
+                                                           reg_date, session)
+                if valuation is not None:
+                    clean_element = valuation.find('ns:Clean', NAMESPACE)
+                    clean = clean_element.text if clean_element is not None else ''
+                    if clean:
+                        logging.info(
+                            f"Successfully retrieved Clean value for Registration: {registration} using rounded-up Mileage: {rounded_up_mileage_value}")
+
+        output_rows.append([registration, mileage_for_request, capid, reg_date, clean, retail, VALUATION_DATE,
+                            rounded_up_mileage_value])
+
+with open(output_csv_path, 'w', newline='') as f_output:
+    csv_writer = csv.writer(f_output)
+    csv_writer.writerow(
+        ['VRM', 'Mileage', 'CAPID', 'DFR', 'CleanLive', 'RetailLive', 'ValuationDateLive', 'RoundedUpMileage'])
+    csv_writer.writerows(output_rows)
+
+print(f"Script completed. Errors and info messages logged to {log_file}")

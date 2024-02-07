@@ -1,0 +1,166 @@
+import requests
+import pandas as pd
+import csv
+import xml.etree.ElementTree as ET
+from datetime import datetime
+import logging
+import time
+import os
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import threading  # Add this line to import the threading module
+
+# Create a timestamp for the log file
+current_date = datetime.now().strftime('%Y-%m-%d %H_%M_%S')
+log_file = f'D:/Tom/Python Scripts/CAP/CAP Stock/Logs/CAP_Stock_errors_{current_date}.log'
+
+# Configure logging
+logging.basicConfig(filename=log_file, level=logging.INFO, format='%(asctime)s %(message)s')
+
+# Constants
+URL = 'https://soap.cap.co.uk/usedvalueslive/capusedvalueslive.asmx/GetUsedLive_IdRegDateMileage'
+HEADERS = {'Content-Type': 'application/x-www-form-urlencoded'}
+SUBSCRIBER_ID = '101148'
+PASSWORD = 'DRM148'
+DATABASE = 'CAR'
+FIXED_VALUATION_DATE = '2023-10-27'
+VALUATION_DATE = datetime.now().strftime('%Y-%m-%d')
+input_csv_path = r'D:\Tom\Python Scripts\CAP\CAP Stock\CAP_Stock_Input.csv'
+
+# Modify output_csv_path to include date
+output_csv_base = r'D:\Tom\Python Scripts\CAP\CAP Stock\CAP_Stock_Output'
+current_date_for_file = datetime.now().strftime('_%Y_%m_%d')
+output_csv_path = f"{output_csv_base}{current_date_for_file}.csv"
+
+# Check if file exists and modify name to prevent overwrite
+file_counter = 1
+while os.path.exists(output_csv_path):
+    output_csv_path = f"{output_csv_base}{current_date_for_file}_{file_counter}.csv"
+    file_counter += 1
+
+NAMESPACE = {'ns': 'https://soap.cap.co.uk/usedvalueslive'}
+
+# Load and filter out rows with any blank input data
+df = pd.read_csv(input_csv_path).dropna()
+
+# Reset index after dropping rows
+df.reset_index(drop=True, inplace=True)
+
+max_retries = 3
+print_lock = threading.Lock()  # Initialize a lock object for thread-safe printing
+
+# Functions to round up mileage
+def round_up_to_nearest(mileage, round_to):
+    return int((mileage + round_to - 1) / round_to) * round_to
+
+# Function to fetch with retries
+def fetch_with_retries(payload, registration, mileage_for_request, capid, reg_date, session, valuation_date_type, round_to):
+    retries = 0
+    while retries < max_retries:
+        response = session.post(URL, headers=HEADERS, data=payload)
+        if response.status_code != 200:
+            error_message = f"Server returned status code {response.status_code}: {response.content}"
+            logging.error(f"{error_message}, Registration: {registration}, Mileage: {mileage_for_request}")
+            retries += 1
+            time.sleep(1)
+        else:
+            break
+
+    if retries == max_retries:
+        logging.error(f"Request failed after {max_retries} retries, Registration: {registration}, Mileage: {mileage_for_request}")
+        return None
+
+    root = ET.fromstring(response.content)
+    valuation = root.find('.//ns:Valuation', NAMESPACE)
+
+    if valuation is None:
+        logging.warning(f"No valuation found for Registration: {registration}, Mileage: {mileage_for_request}")
+        return None
+
+    clean_element = valuation.find('ns:Clean', NAMESPACE)
+    retail_element = valuation.find('ns:Retail', NAMESPACE)
+    clean = clean_element.text if clean_element is not None else ''
+    retail = retail_element.text if retail_element is not None else ''
+
+    if not clean and round_to == 1000:
+        # If Clean value is missing for 1000 rounding, try 10000 rounding
+        mileage_for_request = round_up_to_nearest(mileage_for_request, 10000)
+        payload['mileage'] = mileage_for_request
+        return fetch_with_retries(payload, registration, mileage_for_request, capid, reg_date, session, valuation_date_type, 10000)
+
+    return (valuation_date_type, registration, clean, retail, mileage_for_request if round_to == 10000 else '')
+
+max_workers = 4  # Reduced to 4 to prevent connection pool issues
+
+# Define a function to process each row
+def process_row(idx, row):
+    registration = row['Registration']
+    print(f"Processing row {idx + 1} of {len(df)}, Registration: {registration}")
+    
+    reg_date = datetime.strptime(row['DateFirstRegistered'], '%d/%m/%Y').strftime('%Y-%m-%d')
+    capid = int(row['CapID'])
+
+    # Create payload for requests
+    payload = {
+        'subscriberId': SUBSCRIBER_ID,
+        'password': PASSWORD,
+        'database': DATABASE,
+        'capid': capid,
+        'regDate': reg_date
+    }
+
+    # Initialize variables to store results
+    current_valuation = {'clean': '', 'retail': ''}
+    fixed_valuation = {'clean': '', 'retail': ''}
+    rounded_up_10000 = ''  # Initialize here
+
+    # Round up mileage to nearest 1000 for initial request
+    rounded_mileage = round_up_to_nearest(row['Mileage'], 1000)
+    payload['mileage'] = rounded_mileage
+    payload['valuationDate'] = VALUATION_DATE
+
+    # Set up the future task for current valuation date
+    future1 = executor.submit(fetch_with_retries, payload.copy(), registration, rounded_mileage, capid, reg_date,
+                        session, 'current', 1000)
+
+    # Adjust payload for fixed valuation date and set up future task
+    payload['valuationDate'] = FIXED_VALUATION_DATE
+    future2 = executor.submit(fetch_with_retries, payload, registration, rounded_mileage, capid, reg_date, session,
+                        'fixed', 1000)
+
+    # Process the futures as they complete for each row
+    for future in as_completed([future1, future2]):
+        result = future.result()
+        if result is not None:
+            valuation_date_type, registration, clean, retail, rounded_up_10000 = result
+            if valuation_date_type == 'current':
+                current_valuation['clean'] = clean
+                current_valuation['retail'] = retail
+            elif valuation_date_type == 'fixed':
+                fixed_valuation['clean'] = clean
+                fixed_valuation['retail'] = retail
+
+    # Combine the results and write to CSV
+    output_row = [
+        registration, row['Mileage'], rounded_up_10000 if rounded_up_10000 else '', capid, reg_date, 
+        current_valuation['clean'], current_valuation['retail'],
+        VALUATION_DATE, fixed_valuation['clean'], fixed_valuation['retail'],
+        FIXED_VALUATION_DATE
+    ]
+    
+    with print_lock:
+        csv_writer.writerow(output_row)
+
+# Open the CSV file in append mode at the beginning
+with open(output_csv_path, 'a', newline='') as f_output, ThreadPoolExecutor(max_workers=max_workers) as executor, requests.Session() as session:
+    csv_writer = csv.writer(f_output)
+    if os.stat(output_csv_path).st_size == 0:
+        # Write headers only if file is empty
+        csv_writer.writerow([
+            'VRM', 'Mileage', 'RoundedUp10000', 'CAPID', 'DFR', 'CleanLive', 'RetailLive',
+            'ValuationDateLive', 'CleanMonth', 'RetailMonth', 'ValuationDateMonth'
+        ])
+
+    for idx, row in df.iterrows():
+        process_row(idx, row)
+
+print(f"Script completed. Errors and info messages logged to {log_file}")

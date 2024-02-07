@@ -1,0 +1,2 @@
+ERROR:root:An error occurred: Cannot connect to host soap.cap.co.uk:443 ssl:default [The semaphore timeout period has expired]
+ERROR:root:An error occurred: 'NoneType' object has no attribute 'text'

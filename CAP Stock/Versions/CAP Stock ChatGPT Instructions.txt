@@ -1,0 +1,92 @@
+Please create a Python script that does the following
+
+HTTP POST requests to a SOAP service
+Use request not zeep
+There is no WSDL
+Ensure that you parse the XML using xml.etree.ElementTree
+Import the ElementTree (ET) module from the xml.etree package for XML parsing.
+Ensure that you use a SOAP envelope
+Ensure to take not of the example request and example response below
+Take note of Content-Type: application/x-www-form-urlencoded
+Ensure to show the full text in Python for any errors
+Check that the payload values are in the correct format
+Input dates are in the format yyyy-mm-dd
+
+Requests are stored in:
+
+D:\Tom\Python Scripts\CAP\SOAP_Input.csv
+
+CSV headers are:
+
+Registration	Mileage	CapID	DateFirstRegistered
+
+Where Mileage = "mileage" in the request, CapID = "capid" in the request, DateFirstRegistered = "regDate" in the request
+
+All responses should be stored in D:\Tom\Python Scripts\CAP\SOAP_Output_yyyy_mm_dd.csv where yyyy_mm_dd is today's date
+
+Output CSV headers are :
+
+VRM	mileage	capid	regDate	Clean	Retail	ValuationDate
+
+Where VRM, capid, regDate are taken from the input CSV.  mileage = "Mileage" from the response, Clean = Clean, Retail = Retail
+
+Show me every row that's processed as "1 of 3000" for example
+Show me the total number of rows in the output CSV
+
+
+
+Example request:
+
+POST /usedvalueslive/capusedvalueslive.asmx/GetUsedLive_IdRegDateMileage HTTP/1.1
+Host: soap.cap.co.uk
+Content-Type: application/x-www-form-urlencoded
+Content-Length: length
+
+subscriberId=string&password=string&database=string&capid=string&valuationDate=string&regDate=string&mileage=string
+
+
+subscriberId is always 101148
+password is always DRM148
+database is always CAR
+valuationDate is always today
+
+
+Example response:
+
+HTTP/1.1 200 OK
+Content-Type: text/xml; charset=utf-8
+Content-Length: length
+
+<?xml version="1.0" encoding="utf-8"?>
+<SingleValuationResult xmlns="https://soap.cap.co.uk/usedvalueslive">
+  <Plate>
+    <Year>int</Year>
+    <Month>int</Month>
+    <Letter>string</Letter>
+  </Plate>
+  <ValuationDate>
+    <Date>dateTime</Date>
+    <IsMonthlyPosition>boolean</IsMonthlyPosition>
+    <Valuations>
+      <Valuation>
+        <Mileage>int</Mileage>
+        <Retail>int</Retail>
+        <Clean>int</Clean>
+        <Average>int</Average>
+        <Below>int</Below>
+      </Valuation>
+      <Valuation>
+        <Mileage>int</Mileage>
+        <Retail>int</Retail>
+        <Clean>int</Clean>
+        <Average>int</Average>
+        <Below>int</Below>
+      </Valuation>
+    </Valuations>
+    <Comments>
+      <string>string</string>
+      <string>string</string>
+    </Comments>
+  </ValuationDate>
+</SingleValuationResult>
+
